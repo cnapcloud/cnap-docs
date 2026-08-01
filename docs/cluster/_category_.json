@@ -1,0 +1,8 @@
+{
+  "position": 1,
+  "label": "K8s 클러스터",
+  "link": {
+    "type": "generated-index",
+    "description": "EKS / K3s / Kind 클러스터 설치와 멀티 클러스터 네트워크(VPN/TGW) 구성 가이드입니다. 설치 스크립트 소스: https://github.com/cnapcloud/k8s"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "position": 5,
+  "label": "CI/CD",
+  "link": {
+    "type": "generated-index",
+    "description": "Jenkins, Harbor, ArgoCD 설치 가이드."
+  }
+}

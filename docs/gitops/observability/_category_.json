@@ -1,0 +1,8 @@
+{
+  "position": 6,
+  "label": "관측성",
+  "link": {
+    "type": "generated-index",
+    "description": "Prometheus, Jaeger, Fluentd 설치 가이드."
+  }
+}

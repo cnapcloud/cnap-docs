@@ -1,0 +1,8 @@
+{
+  "position": 4,
+  "label": "인증 및 트래픽 관리",
+  "link": {
+    "type": "generated-index",
+    "description": "Keycloak, OAuth2 Proxy, Kong 설치 가이드."
+  }
+}

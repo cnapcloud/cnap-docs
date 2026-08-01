@@ -1,0 +1,153 @@
+# CNAP 가이드 Docusaurus 전환 기획안
+
+## Context
+
+CNAP 설치 가이드는 현재 `hugo-cnap`(Hugo)의 `guide/all.md`가 허브 역할을 하며, 큰 HTML
+`<table>`을 나열하는 구조라 탐색 흐름이 안 보인다는 문제가 있었다. 여러 차례 범위를 좁힌
+끝에 확정된 방향은 다음과 같다.
+
+- **`cnap-docs` 디렉터리(현재 이 폴더)를 CNAP 전용 사이트로 전면 재구성한다.** 이 폴더는
+  이름과 달리 지금은 전혀 다른 제품인 RAG Platform 문서(`rag-docs`, rag-docs.cnapcloud.com)로
+  채워져 있다 — 로컬에 git 백업이 없는 상태이지만, 완전히 새로 시작하는 것으로 확정했으므로
+  RAG 관련 콘텐츠(`docs/`, `src/components`의 RAG 카드, RAG 전용 이미지, README/CLAUDE.md의
+  RAG 컨벤션)를 전부 제거하고 그 자리에 CNAP 콘텐츠를 채운다. **재사용하는 건 내용이 아니라
+  프로젝트 구조/툴링 패턴**(package.json 스크립트, Makefile, Dockerfile, `_category_.json`
+  형식, config 골격)뿐이다.
+- 마이그레이션 대상 콘텐츠는 **`hugo-cnap/site/content/guide/all.md`의 목차에 실제로
+  링크된 파일 + k3s/kind 클러스터 설치 문서 4개**다 — `cluster.md`/`gitops.md`(별도 랜딩),
+  `2-09-data-platform-consulting.md`는 제외.
+- 새 사이트의 첫 페이지(랜딩)는 `all.md`의 내용(타이틀/흐름 안내)을 바탕으로 만들되,
+  "Cluster 설치 / GitOps 플랫폼 설치"를 페이지 위에 별도 메뉴로 나열하지 않는다 — 실제
+  탐색은 Docusaurus 사이드바가 담당하므로 랜딩은 히어로 + 안내 문구 + 진입 CTA 정도로
+  단순하게 둔다.
+
+사전 조사(Explore 서브에이전트 2건)로 확인한 사실:
+
+- **마이그레이션 대상은 정확히 32개 파일**: `cluster/` 6개(`eks-provision.md`,
+  `vpn-tgw-provision.md`, `k3s-provision.md`, `k3s-install.md`, `kind-provision.md`,
+  `kind-install.md`) + `gitops/` 26개(`0-00-prerequisites.md` ~ `7-01-demo.md`). `all.md`의
+  "1-02 EKS Addons" 행은 별도 파일이 아니라 `eks-provision.md` 안의 앵커(`#5-gitops-...`)를
+  가리키는 것. k3s/kind 4개 파일은 상호 간, 그리고 `eks-provision`과 절대경로
+  `/guide/cluster/xxx/` 형태로 교차 링크되어 있음(상대경로 아님) — 링크 변환 시 별도 처리.
+- 32개 파일 모두 **Hugo front matter 없음, 숏코드 없음, HTML 주석 없음** — 순수 마크다운이라
+  MDX 변환 리스크가 낮다. 꺾쇠 플레이스홀더(`<password>` 등)는 전부 코드 스팬/펜스 안에 있어
+  안전.
+- **예외 1**: `gitops/5-01-prometheus.md` 마지막 2줄이 `</content>` /
+  `<parameter name="filePath">...` 라는 과거 AI 툴콜 찌꺼기다. 내용 자체(9. 부록 체크리스트)는
+  완결돼 있으므로 유실은 아니고, 이 2줄만 제거하면 된다. MDX로는 그대로 두면 닫히지 않은
+  태그로 인식돼 빌드가 깨지므로 **반드시 제거하고 마이그레이션**.
+- 내부 문서 간 링크는 전부 `../1-03-cert-manager` 같은 Hugo 상대경로 스타일이다. Hugo는
+  pretty-URL(각 페이지가 자기 디렉터리)이라 `../형제파일`이 같은 섹션을 가리키지만,
+  Docusaurus는 파일시스템 기준 상대경로라 같은 폴더의 형제 파일은 `./형제파일`(또는
+  `형제파일`)이어야 한다. **전수 변환 필요** — 아래 링크 매핑 참고.
+- 26개 `gitops/*` 파일 중 25개(0-00 제외)가 공통 템플릿을 따른다: 개요 → 사전요구사항 →
+  디렉터리 구조 → 배포 → 검증 → (운영) → Troubleshooting → 제거 → (체크리스트). 내용 병합
+  없이 파일 단위 그대로 옮기는 게 맞다 — 원래 안(여러 파일을 `1-xx-network.md` 하나로 병합)은
+  채택하지 않는다(파일당 150~1800줄로 이미 상당한 분량이라 병합하면 2000줄대 단일 문서가
+  되어 유지보수성이 떨어짐). 대신 **Docusaurus 사이드바 카테고리(폴더 + `_category_.json`)로
+  기능군을 묶어서**, 병합 없이도 "묶어서 보이는" 효과를 낸다.
+
+## 기존 `cnap-docs`(RAG)에서 그대로 유지하는 툴링 패턴
+
+- **package.json**: Docusaurus 3.10.2, React 19, `@mdx-js/react`, `prism-react-renderer`,
+  `clsx`. 스크립트(`start`/`build`/`serve`/`clear`/`deploy`) 동일하게 사용.
+- **Makefile**: `install`/`start`/`build`/`serve`/`clean`/`docker-build`/`docker-push` 타겟
+  그대로 재사용, `IMAGE_ORG=cnapcloud`/`IMAGE_NAME`만 새 프로젝트명으로 교체.
+- **Dockerfile/nginx.conf**: `node:22-alpine` 빌드 → `nginx:1.27-alpine` 서빙 2-stage 구조
+  그대로 재사용.
+- **`_category_.json`** 패턴: `{"position": N, "label": "...", "link": {"type":
+  "generated-index", "description": "..."}}`.
+- **`docusaurus.config.js`**: `i18n.defaultLocale: 'ko'`, `future.v4: true`, docs 프리셋
+  `routeBasePath: '/'`, `numberPrefixParser: false`, `blog: false` 구조 그대로, navbar/footer
+  항목만 CNAP 섹션(Cluster/GitOps)으로 교체.
+- **`src/pages/index.js` + `src/css/custom.css`**: 히어로 헤더 + CTA 버튼 패턴 재사용.
+  브랜드 색상은 `hugo-cnap`의 기존 CNAP 팔레트를 그대로 가져온다(`sections.html`의
+  `:root` 토큰: `--cn-dark #05294d`, `--cn-blue #1976d2`, `--cn-orange #bf7b3a` 등) — 새로
+  디자인하지 않고 기존 CNAP 브랜드와 일관되게 맞춘다.
+- **CI 없음**: `cnap-docs`/레포 루트 어디에도 `.github/` 워크플로가 없다 — 새 프로젝트도
+  지금은 CI 없이 `make docker-build`/`docker-push` 수동 흐름만 갖춘다(요청 시 추가).
+
+## 새 디렉터리 구조 (cnap-docs 내부, 기존 RAG 콘텐츠 전부 대체)
+
+```
+cnap-docs/
+├── docs/
+│   ├── cluster/
+│   │   ├── _category_.json         # label: "Cluster 설치", position: 1
+│   │   ├── eks-provision.md
+│   │   ├── vpn-tgw-provision.md
+│   │   ├── k3s-provision.md
+│   │   ├── k3s-install.md
+│   │   ├── kind-provision.md
+│   │   └── kind-install.md
+│   └── gitops/
+│       ├── _category_.json         # label: "GitOps 플랫폼 설치", position: 2
+│       ├── prerequisites.md        # ← 0-00-prerequisites.md
+│       ├── network/                # _category_.json: "네트워크 및 인증서"
+│       │   ├── metallb.md  reflector.md  cert-manager.md  ingress-nginx.md
+│       ├── data-platform/          # _category_.json: "데이터베이스 / 스토리지"
+│       │   ├── redis-ha.md  minio.md  cnpg-operator.md  cnpg-cluster.md
+│       │   ├── eck-operator.md  eck-stack.md
+│       │   └── opensearch-cluster.md  opensearch-dashboard.md
+│       ├── auth-routing/           # keycloak.md  oauth2-proxy.md  kong.md
+│       ├── cicd/                   # jenkins.md  harbor.md  argocd.md
+│       ├── observability/          # prometheus.md  jaeger.md  fluentd.md
+│       ├── messaging/              # rabbitmq.md  kafka.md  kafka-ui.md
+│       └── application/            # demo.md
+├── src/pages/index.js              # all.md 기반 랜딩(히어로+CTA, 메뉴 나열 없음)
+├── docusaurus.config.js / sidebars.js (autogenerated) / Makefile / Dockerfile / nginx.conf
+└── static/img/ (favicon, logo, social-card — CNAP 브랜드 자산 필요, 아래 "확인 필요" 참고)
+```
+
+`sidebars.js`는 `cnap-docs`처럼 `tutorialSidebar: [{type: 'autogenerated', dirName: '.'}]`로
+폴더 구조에서 자동 생성 — 각 카테고리 순서는 `_category_.json`의 `position`으로 제어.
+
+## 마이그레이션 작업
+
+1. **RAG 콘텐츠 제거 + 스캐폴딩 갱신**: `docs/` 하위 RAG 문서 전부, `src/components/IntroCards`·
+   `HomepageFeatures`의 RAG 전용 데이터, `static/img`의 RAG 전용 스크린샷(`kb-admin/`,
+   `video/`) 삭제. `package.json`의 `name`(`rag-docs` → `cnap-docs`), `docusaurus.config.js`의
+   타이틀·태그라인·`url`·`organizationName`/`projectName`·navbar/footer 항목·브랜드 색상,
+   `README.md`/`CLAUDE.md`를 CNAP 기준으로 재작성. `Makefile`/`Dockerfile`/`nginx.conf`/
+   `.gitignore`/`.dockerignore`/`sidebars.js` 구조는 그대로 유지.
+2. **콘텐츠 32개 파일 이동**: 각 파일에
+   - 프런트매터 추가 (`title`은 파일의 기존 H1에서 추출, 본문 H1은 삭제 — 페이지 제목을
+     본문 헤딩에서 그대로 반복하지 않는다).
+   - 내부 링크 변환: 상대경로(`../1-03-cert-manager`)와 절대경로(`/guide/cluster/xxx/`)를
+     모두 새 폴더 구조 기준 상대경로(`.md` 확장자 포함)로 치환.
+   - `5-01-prometheus.md`는 끝의 2줄(`</content>`, `<parameter ...>`) 제거 후 이동.
+3. **랜딩 페이지(`src/pages/index.js`)**: `all.md` 상단 안내 문구("CNAP 플랫폼 설치 가이드",
+   Phase 1/2 취지)를 히어로 타이틀/서브타이틀로 재작성, CTA 버튼 1개로 `docs/cluster/eks-provision`
+   또는 `docs/gitops/prerequisites`로 연결. "Cluster 설치"/"GitOps 플랫폼 설치" 2항목을
+   나열형 메뉴로 만들지 않는다.
+4. **`_category_.json` 8개 작성** (cluster 1개 + gitops 최상위 1개 + 하위 카테고리 6개),
+   기능군 라벨: 네트워크 및 인증서 / 데이터베이스·스토리지 / 인증 및 트래픽 관리 / CI·CD /
+   관측성 / 메시징 / 애플리케이션.
+
+## 확인이 필요한 항목
+
+- **사이트 타이틀/브랜딩**: **"CNAP DOCS"**로 설정. 디렉터리명은 `cnap-docs` 그대로 유지(이미
+  실제 이름과 맞음), `package.json`의 `name`만 `rag-docs`에서 `cnap-docs`로 교체.
+- **배포 URL/도메인**: `docusaurus.config.js`의 `url`(예: `https://guide.cnapcloud.com`)을
+  placeholder로 넣고 진행, 실제 도메인 확정되면 교체.
+- **로고/파비콘**: `hugo-cnap/site/static/images/favicon.png`,
+  `hugo-cnap/site/static/images/logos/icon-logo.svg`를 그대로 복사해 재사용. 소셜카드
+  이미지는 없으므로 필요하면 별도 제작.
+
+## 하지 않는 것 (범위 밖)
+
+- `hugo-cnap` 쪽 파일은 전혀 수정하지 않는다(읽기 전용 소스).
+- `cluster.md`/`gitops.md` 랜딩, `2-09-data-platform-consulting.md`는 이번 마이그레이션에
+  포함하지 않는다.
+- RAG Platform 콘텐츠는 로컬 백업 없이 완전히 제거한다 — 사용자가 명시적으로 확인함
+  ("되돌릴 필요 없어, 완전 새로 시작").
+
+## 검증
+
+- `make install && make start`로 새 프로젝트 로컬 구동, 콘솔에 MDX 컴파일 에러 없는지 확인.
+- `make build`로 정적 빌드 성공 확인(`onBrokenLinks: 'throw'` 설정 시 깨진 내부 링크가 있으면
+  빌드 자체가 실패하므로 링크 변환 누락을 빌드 단계에서 잡아낼 수 있음 — `cnap-docs`처럼
+  `onBrokenLinks: 'throw'`로 설정 권장).
+- 사이드바에서 Cluster/GitOps 두 섹션과 6개 GitOps 하위 카테고리가 의도한 순서로 보이는지
+  브라우저에서 확인.
+- 랜딩 페이지(`/`)가 커스텀 히어로로 뜨고 문서 라우트와 충돌하지 않는지 확인.

@@ -1,0 +1,8 @@
+{
+  "position": 2,
+  "label": "네트워크 및 인증서",
+  "link": {
+    "type": "generated-index",
+    "description": "MetalLB, Reflector, cert-manager, ingress-nginx 설치 가이드."
+  }
+}

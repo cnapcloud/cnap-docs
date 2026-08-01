@@ -1,0 +1,51 @@
+/**
+ * Any CSS included here will be global. The classic template
+ * bundles Infima by default. Infima is a CSS framework designed to
+ * work well for content-centric websites.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap');
+
+/* You can override the default Infima variables here.
+   Color scale matches the CNAP brand palette used on the main CNAP site
+   (hugo-cnap/site/layouts/partials/sections.html --cn-blue #1976d2). */
+:root {
+  --ifm-color-primary: #1976d2;
+  --ifm-color-primary-dark: #1667ba;
+  --ifm-color-primary-darker: #1460af;
+  --ifm-color-primary-darkest: #104f90;
+  --ifm-color-primary-light: #2985e0;
+  --ifm-color-primary-lighter: #4293e3;
+  --ifm-color-primary-lightest: #77b2ea;
+  --ifm-code-font-size: 95%;
+  --ifm-font-family-base: 'Instrument Sans', 'Noto Sans KR', system-ui, -apple-system,
+    'Segoe UI', Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    'Segoe UI Symbol';
+  --ifm-h1-font-size: 2.125rem;
+  --doc-sidebar-width: 300px !important;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+}
+
+/* For readability concerns, you should choose a lighter palette in dark mode. */
+[data-theme='dark'] {
+  --ifm-color-primary: #4e9de0;
+  --ifm-color-primary-dark: #3f8bcb;
+  --ifm-color-primary-darker: #3679b3;
+  --ifm-color-primary-darkest: #2c6294;
+  --ifm-color-primary-light: #6bb0e8;
+  --ifm-color-primary-lighter: #8cc2ee;
+  --ifm-color-primary-lightest: #b8dbf5;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+}
+
+/* Break lines only at word boundaries (Korean 어절) instead of mid-word,
+   with a fallback for long unbreakable tokens like URLs. */
+body {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+/* Double the gap between the navbar brand and the first nav item (개요) */
+.navbar__items:not(.navbar__items--right) .navbar__brand + .navbar__item {
+  margin-left: 1.75rem;
+}
