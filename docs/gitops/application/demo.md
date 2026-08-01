@@ -93,7 +93,8 @@ Client 생성 후 **Credentials** 탭에서 Client Secret을 확인합니다. 4.
 | Client type | OpenID Connect |
 | Client authentication | Off |
 | Standard flow | On |
-| Valid redirect URIs | `https://react-keycloak.cnapcloud.com/*` |
+| Root URL | `https://react-keycloak.cnapcloud.com` |
+| Valid redirect URIs | `/` |
 | Web origins | `https://react-keycloak.cnapcloud.com` |
 
 ### 4.2 배포 설정 업데이트
@@ -228,7 +229,7 @@ make apply DEPLOY_ENV=dev
 
 **원인**: Keycloak `react` Client의 Valid redirect URIs 설정 누락
 
-**해결**: Keycloak 관리 콘솔에서 `react` Client의 Valid redirect URIs에 `https://react-keycloak.cnapcloud.com/*` 추가
+**해결**: Keycloak 관리 콘솔에서 `react` Client의 Root URL이 `https://react-keycloak.cnapcloud.com`으로 설정되어 있고, Valid redirect URIs에 `/`가 등록되어 있는지 확인
 
 ---
 

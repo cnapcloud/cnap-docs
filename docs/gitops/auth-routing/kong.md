@@ -229,7 +229,7 @@ export ACCESS_TOKEN=$(curl -sk -X POST \
   "https://keycloak.cnapcloud.com/realms/cnap/protocol/openid-connect/token" \
   -d grant_type=password \
   -d client_id=oauth2-proxy \
-  -d client_secret=raPfyUzdKoICeaELLIUXGpnqwtd0JrqN \
+  -d client_secret=raPfyUzd****************JrqN \
   -d username=<admin-user> \
   -d password=<admin-password> \
   -d scope='openid profile email' \

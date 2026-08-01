@@ -72,7 +72,8 @@ Keycloak Admin → `cnap` realm → Clients → `rabbitmq` 클라이언트를 �
 |------|---|
 | Client authentication | On (Confidential) |
 | Standard Flow | Enabled |
-| Valid Redirect URIs | `https://rabbit.cnapcloud.com/*` |
+| Root URL | `https://rabbit.cnapcloud.com` |
+| Valid Redirect URIs | `/js/oidc-oauth/login-callback.html` |
 | Web Origins | `https://rabbit.cnapcloud.com` |
 
 **Client Scopes 탭:**
@@ -86,6 +87,21 @@ Keycloak Admin → `cnap` realm → Clients → `rabbitmq` 클라이언트를 �
 | Mapper Type | Group Membership |
 | Token Claim Name | `groups` |
 | Full group path | Off |
+
+**Audience Mapper 추가 (필수):**
+
+Keycloak이 발급하는 기본 액세스 토큰은 `aud` 클레임이 `account`로 고정되어 있어, RabbitMQ가 자신을 대상으로 발급된 토큰인지 구분하지 못합니다. `rabbitmq` client(또는 `groups`와 같은 전용 client scope)에 Audience Mapper를 추가해 `aud`에 `rabbitmq`를 명시적으로 포함시킵니다.
+
+`rabbitmq` Client → **Client Scopes** → 전용 스코프(또는 `dedicated` scope) → **Mappers** → **Add mapper** → **By configuration** → **Audience**:
+
+| 항목 | 값 |
+|------|---|
+| Name | `rabbitmq-audience` |
+| Included Client Audience | `rabbitmq` |
+| Add to ID token | Off |
+| Add to access token | On |
+
+이 매퍼가 있어야 다른 client(argocd, grafana 등)용으로 발급된 토큰이 RabbitMQ에서 그대로 통용되는 것을 막을 수 있습니다.
 
 ### 4.2. Keycloak 그룹 생성
 
@@ -184,11 +200,13 @@ spec:
       management.oauth_provider_url=https://keycloak.cnapcloud.com/realms/cnap
       management.oauth_scopes=openid profile email groups
       auth_oauth2.resource_server_id=rabbitmq
-      auth_oauth2.verify_aud=false
+      auth_oauth2.verify_aud=true
       auth_oauth2.issuer=https://keycloak.cnapcloud.com/realms/cnap
       auth_oauth2.jwks_url=https://keycloak.cnapcloud.com/realms/cnap/protocol/openid-connect/certs
       auth_oauth2.additional_scopes_key=groups
-      auth_oauth2.https.peer_verification=verify_none
+      auth_oauth2.https.peer_verification=verify_peer
+      auth_oauth2.https.cacertfile=/etc/ssl/certs/ca-certificates.crt
+      auth_oauth2.https.hostname_verification=wildcard
 
     advancedConfig: |
       [
@@ -207,9 +225,13 @@ spec:
       - rabbitmq_auth_backend_oauth2
 ```
 
-**`auth_oauth2.verify_aud=false`**: Keycloak이 발급하는 토큰의 `aud` 클레임이 `account`로 설정되어 있어 audience 검증을 비활성화합니다.
+**`auth_oauth2.verify_aud=true`**: `resource_server_id=rabbitmq`가 토큰의 `aud` 클레임에 포함되어 있는지 검증합니다. 4.1의 Audience Mapper(`Included Client Audience: rabbitmq`)가 반드시 함께 설정되어 있어야 하며, 없으면 다른 client용 토큰(`aud=account`)도 그대로 통과되어 서비스 간 토큰 재사용이 가능해집니다.
 
-**`auth_oauth2.https.peer_verification=verify_none`**: Erlang TLS가 와일드카드 인증서(`*.cnapcloud.com`)의 hostname 검증을 거부하는 문제를 우회합니다.
+> **비활성화하려면 (권장하지 않음)**: Audience Mapper를 구성할 수 없는 등 불가피한 경우에만 `auth_oauth2.verify_aud=false`로 되돌립니다. 이 경우 `cnap` realm에서 발급된 어떤 client의 토큰이든(`aud` 값과 무관하게) `groups` 클레임만 맞으면 RabbitMQ 접근이 허용되므로, 다른 서비스에서 유출된 토큰이 RabbitMQ 권한 탈취로 이어질 수 있다는 점을 감수해야 합니다.
+
+**`auth_oauth2.https.peer_verification=verify_peer` + `hostname_verification=wildcard`**: JWKS 조회 시 인증서 체인 검증은 유지하면서, Erlang TLS가 와일드카드 인증서(`*.cnapcloud.com`)의 hostname 매칭만 정확히 처리하도록 합니다. `peer_verification=verify_none`으로 검증 자체를 끄면 MITM으로 위조된 JWKS를 받아들일 수 있으므로 지양합니다. `cacertfile`은 `cnapcloud.com` 인증서를 발급한 CA(Let's Encrypt 사용 시 시스템 CA 번들, 사내 Root CA 사용 시 해당 CA 인증서 경로)를 가리켜야 합니다.
+
+> **무효화하려면 (권장하지 않음)**: `cacertfile` 경로가 맞지 않거나 사내 Root CA를 배포하기 어려운 등 불가피한 경우에만 `auth_oauth2.https.peer_verification=verify_none`으로 되돌립니다. 이 경우 RabbitMQ는 어떤 CA로 서명됐는지, hostname이 맞는지 전혀 확인하지 않고 JWKS 응답을 그대로 신뢰하므로, 네트워크 경로상 MITM 공격자가 위조된 서명키를 내려줘도 RabbitMQ가 그 키로 서명된 위조 토큰을 정상 토큰처럼 받아들이게 됩니다.
 
 **`scope_aliases`**: Keycloak `groups` claim의 그룹명을 RabbitMQ 권한 목록으로 확장합니다. `rabbitmq.` prefix는 RabbitMQ 내부 파싱에 사용되며 Keycloak 그룹명과 무관합니다.
 
@@ -333,13 +355,15 @@ log.console.level=info
 kubectl -n messaging logs rabbitmq-server-0 | grep "Failed to download signing keys"
 ```
 
-**해결 1**: `additionalConfig`에 아래 설정을 추가합니다.
+**해결 1**: `peer_verification=verify_none`으로 검증을 끄지 않습니다 — `additionalConfig`에 아래 설정을 추가해 hostname 매칭만 고칩니다.
 
 ```
-auth_oauth2.https.peer_verification=verify_none
+auth_oauth2.https.peer_verification=verify_peer
+auth_oauth2.https.cacertfile=/etc/ssl/certs/ca-certificates.crt
+auth_oauth2.https.hostname_verification=wildcard
 ```
 
-**원인 2**: JWT의 `aud` 클레임이 `account`이나 `resource_server_id=rabbitmq`로 설정되어 audience 불일치
+**원인 2**: JWT의 `aud` 클레임에 `rabbitmq`가 없어서 audience 불일치 (Keycloak 기본 토큰은 `aud=account`)
 
 로그 확인:
 
@@ -347,11 +371,7 @@ auth_oauth2.https.peer_verification=verify_none
 kubectl -n messaging logs rabbitmq-server-0 | grep "invalid credentials"
 ```
 
-**해결 2**: `additionalConfig`에 아래 설정을 추가합니다.
-
-```
-auth_oauth2.verify_aud=false
-```
+**해결 2**: `auth_oauth2.verify_aud=false`로 검증을 끄지 않습니다 — 다른 client용 토큰까지 통과시키는 audience confusion 위험이 있습니다. 대신 4.1에서 안내한 대로 `rabbitmq` client에 Audience Mapper(`Included Client Audience: rabbitmq`)를 추가해 토큰의 `aud`에 `rabbitmq`가 실제로 포함되도록 고칩니다.
 
 ### 7.5. Management UI — `Not management user`
 
@@ -404,7 +424,7 @@ kubectl delete crd rabbitmqclusters.rabbitmq.com
 
 **Keycloak 설정:**
 - [ ] `rabbitmq` 클라이언트 생성 (Client authentication: On)
-- [ ] Valid Redirect URIs: `https://rabbit.cnapcloud.com/*`
+- [ ] Root URL: `https://rabbit.cnapcloud.com`, Valid Redirect URIs: `/js/oidc-oauth/login-callback.html`
 - [ ] Web Origins: `https://rabbit.cnapcloud.com` (슬래시 2개 확인)
 - [ ] `groups` Client Scope 할당 (Default)
 - [ ] Group Membership mapper 설정 (Full group path: Off)

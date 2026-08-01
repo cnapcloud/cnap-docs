@@ -124,7 +124,11 @@ spec:
       - name: plain
         port: 9092
         type: internal
-        tls: false
+        tls: true
+        authentication:
+          type: scram-sha-512
+    authorization:
+      type: simple
     config:
       offsets.topic.replication.factor: 1          # 컨슈머 오프셋 토픽 복제 계수
       transaction.state.log.replication.factor: 1  # 트랜잭션 로그 복제 계수
@@ -139,9 +143,43 @@ spec:
     userOperator: {}
 ```
 
-- `listeners`: 클러스터 내부 전용 평문 리스너(9092)만 구성합니다. 외부 노출이 필요하면 `type: route` 또는 `type: loadbalancer` 리스너를 추가합니다.
+- `listeners`: 클러스터 내부 전용 리스너(9092)만 구성합니다. `tls: true` + `authentication.type: scram-sha-512`로 암호화와 인증을 모두 적용합니다. 외부 노출이 필요하면 `type: route` 또는 `type: loadbalancer` 리스너를 추가합니다.
+- `authorization.type: simple`: SCRAM으로 인증된 사용자라도 명시적으로 ACL을 부여받은 topic/group에만 접근하도록 강제합니다. 아래 `KafkaUser` CR의 `acls` 목록이 실제 권한 범위를 결정합니다.
 - `config`: 복제 계수와 ISR을 1로 설정한 dev 환경 값입니다. 운영 환경에서는 브로커 수에 맞게 올려야 합니다. 세그먼트 크기(`log.segment.bytes: 128MB`)와 리텐션(`log.retention.bytes: 512MB`, `log.retention.hours: 24`)은 토픽에 별도 설정이 없을 때 적용되는 브로커 기본값입니다. `min.insync.replicas`는 반드시 `default.replication.factor`보다 작게 설정해야 합니다. 같거나 크면 복제본 1개 장애 시 쓰기가 즉시 차단됩니다 (예: `replication.factor: 3`, `min.insync.replicas: 2`).
 - `entityOperator`: `KafkaTopic` / `KafkaUser` CR을 감시하는 Topic Operator와 User Operator를 활성화합니다.
+
+### 4.2.1. KafkaUser 생성 (SCRAM 인증 + ACL)
+
+서비스별로 계정을 발급하고 접근 가능한 topic/consumer group을 ACL로 제한합니다.
+
+```yaml
+# kafkauser-app.yaml
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaUser
+metadata:
+  name: app-producer
+  namespace: messaging
+  labels:
+    strimzi.io/cluster: kafka
+spec:
+  authentication:
+    type: scram-sha-512
+  authorization:
+    type: simple
+    acls:
+      - resource:
+          type: topic
+          name: app-events
+          patternType: literal
+        operations: [Write, Describe]
+      - resource:
+          type: group
+          name: app-consumer-group
+          patternType: literal
+        operations: [Read]
+```
+
+`kubectl apply -f kafkauser-app.yaml -n messaging` 이후, User Operator가 `app-producer` Secret(SCRAM 자격증명 포함)을 자동 생성합니다. 클라이언트는 `kubectl get secret app-producer -n messaging -o jsonpath='{.data.password}' | base64 -d`로 패스워드를 확인해 `sasl.jaas.config`에 사용합니다. 모든 서비스가 공유하는 단일 관리자 계정 대신, 서비스마다 별도 `KafkaUser`를 발급해 ACL 범위를 분리하는 것을 권장합니다.
 
 ### 4.3. 클러스터 배포
 
@@ -202,34 +240,52 @@ kafka   3                                              True    KRaft
 
 ### 5.4. 토픽 생성 및 메시지 송수신 확인
 
-테스트용 토픽을 생성하고 메시지 10건을 송수신합니다.
+SCRAM 인증이 활성화되어 있으므로, 4.2.1에서 만든 `app-producer` KafkaUser의 자격증명과 클러스터 CA 인증서로 클라이언트 설정을 구성한 뒤 테스트합니다.
 
 ```bash
+NAMESPACE=messaging
 BOOTSTRAP=kafka-kafka-bootstrap.messaging.svc.cluster.local:9092
 
-# 임시 Pod를 통해 토픽 생성
+# SCRAM 패스워드, 클러스터 CA 인증서 추출
+KAFKA_PASSWORD=$(kubectl get secret app-producer -n $NAMESPACE -o jsonpath='{.data.password}' | base64 -d)
+CA_CERT=$(kubectl get secret kafka-cluster-ca-cert -n $NAMESPACE -o jsonpath='{.data.ca\.crt}' | base64 -d)
+
+# 테스트 Pod가 사용할 client.properties를 ConfigMap으로 생성
+cat <<EOF | kubectl apply -n $NAMESPACE -f -
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kafka-test-client-config
+data:
+  client.properties: |
+    security.protocol=SASL_SSL
+    sasl.mechanism=SCRAM-SHA-512
+    sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required username="app-producer" password="${KAFKA_PASSWORD}";
+    ssl.truststore.type=PEM
+    ssl.truststore.certificates=${CA_CERT}
+EOF
+
+# 임시 Pod에 ConfigMap을 마운트하여 실행
 kubectl run kafka-test --rm -it --restart=Never \
   --image=confluentinc/cp-kafka:7.9.0 \
-  -n messaging -- \
-  kafka-topics --bootstrap-server $BOOTSTRAP \
-    --create --topic test-topic --partitions 1 --replication-factor 1
-
-# Producer: 메시지 10건 전송
-kubectl run kafka-producer --rm -it --restart=Never \
-  --image=confluentinc/cp-kafka:7.9.0 \
-  -n messaging -- \
-  bash -c "seq 1 10 | awk '{print \"message-\"\$1}' | \
-    kafka-console-producer --bootstrap-server $BOOTSTRAP --topic test-topic"
-
-# Consumer: 메시지 10건 수신 확인
-kubectl run kafka-consumer --rm -it --restart=Never \
-  --image=confluentinc/cp-kafka:7.9.0 \
-  -n messaging -- \
-  kafka-console-consumer --bootstrap-server $BOOTSTRAP \
-    --topic test-topic --from-beginning --max-messages 10
+  --overrides='{"spec":{"containers":[{"name":"kafka-test","image":"confluentinc/cp-kafka:7.9.0","stdin":true,"tty":true,"command":["bash"],"volumeMounts":[{"name":"config","mountPath":"/config"}]}],"volumes":[{"name":"config","configMap":{"name":"kafka-test-client-config"}}]}}' \
+  -n $NAMESPACE
 ```
 
-Producer가 `message-1` ~ `message-10`을 전송한 뒤 종료되고, Consumer에서 10건이 출력되면 정상입니다.
+Pod 안에서 토픽 생성과 메시지 송수신을 확인합니다 (ACL 범위에 맞춰 topic은 `app-events`, consumer group은 `app-consumer-group`을 사용).
+
+```bash
+kafka-topics --bootstrap-server $BOOTSTRAP --command-config /config/client.properties \
+  --create --topic app-events --partitions 1 --replication-factor 1
+
+seq 1 10 | awk '{print "message-"$1}' | \
+  kafka-console-producer --bootstrap-server $BOOTSTRAP --producer.config /config/client.properties --topic app-events
+
+kafka-console-consumer --bootstrap-server $BOOTSTRAP --consumer.config /config/client.properties \
+  --topic app-events --group app-consumer-group --from-beginning --max-messages 10
+```
+
+Producer가 `message-1` ~ `message-10`을 전송한 뒤 종료되고, Consumer에서 10건이 출력되면 정상입니다. ACL에 없는 topic(예: `test-topic`)으로 시도하면 `TopicAuthorizationException`이 발생해야 인가가 정상 동작하는 것입니다.
 
 ```
 message-1

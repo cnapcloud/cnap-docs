@@ -377,20 +377,21 @@ ArgoCD, Jenkins, Harbor, Kong, OAuth2 Proxy, Grafana는 Keycloak OIDC로 SSO를 
 
 ### 6.2 각 클라이언트 생성
 
-| Client ID | Home URL | Valid Redirect URIs | Web Origins |
+| Client ID | Root/Home URL | Valid Redirect URIs | Web Origins |
 |-----------|----------|---------------------|-------------|
-| `argocd` | `https://argocd.cnapcloud.com` | `*` | `https://argocd.cnapcloud.com` |
-| `jenkins` | `https://jenkins.cnapcloud.com` | `*` | `https://jenkins.cnapcloud.com` |
-| `harbor` | `https://harbor.cnapcloud.com` | `*` | `https://harbor.cnapcloud.com` |
-| `kong` | `https://kong.cnapcloud.com` | `*` | `https://kong.cnapcloud.com` |
-| `oauth2-proxy` | `https://oauth2-proxy.cnapcloud.com` | `*` | `https://oauth2-proxy.cnapcloud.com` |
-| `grafana` | `https://grafana.cnapcloud.com` | `*` | `https://grafana.cnapcloud.com` |
+| `argocd` | `https://argocd.cnapcloud.com` | `/auth/callback` | `https://argocd.cnapcloud.com` |
+| `jenkins` | `https://jenkins.cnapcloud.com` | `/securityRealm/finishLogin` | `https://jenkins.cnapcloud.com` |
+| `harbor` | `https://harbor.cnapcloud.com` | `/c/oidc/callback` | `https://harbor.cnapcloud.com` |
+| `oauth2-proxy` | `https://oauth2-proxy.cnapcloud.com` | `/oauth2/callback` | `https://oauth2-proxy.cnapcloud.com` |
+| `grafana` | `https://grafana.cnapcloud.com` | `/login/generic_oauth` | `https://grafana.cnapcloud.com` |
+
+> **Kong**: 별도 Keycloak 클라이언트를 만들지 않습니다. Kong Manager/Admin API는 자체 OIDC 클라이언트 대신 `oauth2-proxy`로 보호됩니다([kong.md](auth-routing/kong.md)).
 
 **생성 절차 (각 클라이언트 반복):**
 
 1. **General settings**: Client Type `OpenID Connect`, Client ID 입력
 2. **Capability config**: Client authentication `ON`, Standard flow ✓, Direct access grants ✓
-3. **Login settings**: Home URL, Valid redirect URIs `*`, Valid post logout redirect URIs `+`, Web origins 입력
+3. **Login settings**: Root URL 입력, Valid redirect URIs는 위 표의 정확한 콜백 경로만 등록(와일드카드 금지), Valid post logout redirect URIs `+`, Web origins 입력
 4. **Credentials** 탭 → Client secret 복사 → 해당 모듈 `values.yaml`에 설정
 
 ---

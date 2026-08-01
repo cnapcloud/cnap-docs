@@ -133,7 +133,8 @@ Keycloak 관리 콘솔에서 `cnap` Realm에 Jenkins OIDC Client를 생성합니
 | Client ID | `jenkins` |
 | Client type | OpenID Connect |
 | Client authentication | On |
-| Valid redirect URIs | `https://jenkins.cnapcloud.com/securityRealm/finishLogin` |
+| Root URL | `https://jenkins.cnapcloud.com` |
+| Valid redirect URIs | `/securityRealm/finishLogin` |
 | Web origins | `https://jenkins.cnapcloud.com` |
 
 Client 생성 후 **Credentials** 탭에서 Client Secret을 확인하고 `values.yaml`의 `clientSecret` 항목에 기록합니다.
@@ -418,7 +419,8 @@ Jenkins UI에서 Keycloak을 연동하여 SSO(Single Sign-On)를 구성합니다
     -   **Client ID**: `jenkins`
     -   **Name**: `Jenkins`
     -   **Client authentication**: `On`
-    -   **Valid redirect URIs**: `https://jenkins.cnapcloud.com/*`
+    -   **Root URL**: `https://jenkins.cnapcloud.com`
+    -   **Valid redirect URIs**: `/securityRealm/finishLogin`
     -   **Valid post logout redirect URIs**: `+` (redirect URIs와 동일하게 적용)
     -   **Web origins**: `https://jenkins.cnapcloud.com`
 4.  생성된 클라이언트의 **Credentials** 탭으로 이동하여 **Client secret**을 복사합니다.
@@ -1311,7 +1313,7 @@ Jenkins API를 통해 자동화 작업을 수행할 수 있습니다.
 
 **API 사용 예시:**
 ```bash
-curl -u admin:11bda33d840757231cc12b0abe1e058762 \
+curl -u admin:11bda33d8407****************58762 \
   https://jenkins.cnapcloud.com/whoAmI/api/json
 ```
 

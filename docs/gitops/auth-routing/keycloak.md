@@ -258,8 +258,9 @@ Keycloak Admin → `cnap` realm → **Clients** → **Create client**
 | Client ID | `grafana` |
 | Client type | `OpenID Connect` |
 | Client authentication | On |
+| Root URL | `https://grafana.cnapcloud.com` |
 | Home URL | `https://grafana.cnapcloud.com` |
-| Valid redirect URIs | `*` |
+| Valid redirect URIs | `/login/generic_oauth` |
 | Valid post logout redirect URIs | `+` |
 | Web origins | `https://grafana.cnapcloud.com` |
 

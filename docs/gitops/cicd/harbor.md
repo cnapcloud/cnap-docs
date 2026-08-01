@@ -63,7 +63,8 @@ harbor/
 |------|----|
 | Client ID | `harbor` |
 | Client authentication | `On` |
-| Valid redirect URIs | `https://harbor.cnapcloud.com/c/oidc/callback` |
+| Root URL | `https://harbor.cnapcloud.com` |
+| Valid redirect URIs | `/c/oidc/callback` |
 
 4. **Credentials** 탭에서 **Client secret**을 복사해 둡니다. 6.2 단계에서 사용합니다.
 

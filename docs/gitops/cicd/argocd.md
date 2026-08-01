@@ -74,8 +74,9 @@ Keycloak 관리 콘솔에서 `cnap` Realm에 ArgoCD OIDC Client를 생성합니�
 | Client type | OpenID Connect |
 | Client authentication | On |
 | Standard flow | On |
-| Valid redirect URIs | `https://argocd.cnapcloud.com/auth/callback` |
-| Valid post logout redirect URIs | `https://argocd.cnapcloud.com/` |
+| Root URL | `https://argocd.cnapcloud.com` |
+| Valid redirect URIs | `/auth/callback` |
+| Valid post logout redirect URIs | `/` |
 | Web origins | `https://argocd.cnapcloud.com` |
 
 Client 생성 후 **Credentials** 탭에서 Client Secret을 확인하고 `values.yaml`의 OIDC 설정에 기록합니다.

@@ -70,7 +70,8 @@ Keycloak Admin Console(`https://keycloak.cnapcloud.com`)에서 `cnap` realm에 �
 |------|----|
 | Client ID | `oauth2-proxy` |
 | Client authentication | On |
-| Valid redirect URIs | `https://oauth2-proxy.cnapcloud.com/oauth2/callback` |
+| Root URL | `https://oauth2-proxy.cnapcloud.com` |
+| Valid redirect URIs | `/oauth2/callback` |
 | Client scopes | `openid`, `profile`, `email`, `groups` |
 
 Client 생성 후 Credentials 탭에서 Client Secret을 확인합니다.
@@ -118,10 +119,9 @@ config:
     cookie_domains=".cnapcloud.com"
     cookie_expire="0s"
     cookie_refresh="3m"
-    cookie_secure=false
-    whitelist_domains=[".cnapcloud.com"]
-    email_domains=["*"]
-    insecure_oidc_allow_unverified_email=true
+    cookie_secure=true
+    whitelist_domains=[".cnapcloud.com"] # 로그인 후 되돌아갈 redirect 대상 도메인 제한
+    email_domains=["<허용할 이메일 도메인, 예: your-company.com>"]   # ID 토큰 email 클레임 도메인 허용 목록
 
     # 세션 스토리지
     session_store_type="redis"
@@ -153,8 +153,8 @@ config:
     skip_jwt_bearer_tokens=true
     oidc_extra_audiences=["account"]
 
-    # 인증 제외 경로
-    skip_auth_routes=["GET=^/api/token", "^/actuator", "^/status"]
+    # 인증 제외 경로 (헬스체크/상태 확인용만 허용, /actuator 전체 노출 금지)
+    skip_auth_routes=["GET=^/api/token", "GET=.*/actuator/health$", "GET=^/status"]
 
 sessionStorage:
   type: redis
