@@ -1,0 +1,8 @@
+{
+  "position": 3,
+  "label": "Keycloak SPI",
+  "link": {
+    "type": "generated-index",
+    "description": "Keycloak Extension SPI(keycloak-extension-spi) 설치, 설정, 개발, 운영 가이드입니다. 소스는 현재 비공개(Private) 저장소로 운영되고 있습니다."
+  }
+}

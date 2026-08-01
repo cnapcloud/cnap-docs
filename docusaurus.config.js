@@ -73,6 +73,7 @@ const config = {
         items: [
           {to: '/cluster/eks-provision', label: 'K8s 클러스터', position: 'left'},
           {to: '/gitops/prerequisites', label: 'GitOps 플랫폼', position: 'left'},
+          {to: '/keycloak-spi/features', label: 'Keycloak SPI', position: 'left'},
         ],
       },
       footer: {
@@ -83,6 +84,7 @@ const config = {
             items: [
               {label: 'K8s 클러스터', to: '/cluster/eks-provision'},
               {label: 'GitOps 플랫폼', to: '/gitops/prerequisites'},
+              {label: 'Keycloak SPI', to: '/keycloak-spi/features'},
             ],
           },
           {
