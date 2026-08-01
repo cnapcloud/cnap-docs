@@ -1,5 +1,5 @@
 ---
-title: "PostgreSQL Cluster"
+title: "CNPG 클러스터"
 sidebar_position: 4
 ---
 

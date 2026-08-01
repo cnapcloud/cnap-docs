@@ -50,6 +50,8 @@ sidebar_position: 2
 
 이 Terraform 구성은 Keycloak SAML 인증 기반의 AWS Client VPN과 Transit Gateway Hub-and-Spoke 아키텍처를 자동으로 배포합니다.
 
+관련 소스 코드는 [GitHub Repository](https://github.com/cnapcloud/k8s.git)의 `vpn-tgw/` 디렉토리에서 확인할 수 있습니다.
+
 ### 1.1 배경
 
 멀티 환경(DEV/STG/PRD 등)을 운영하는 조직에서는 각 환경을 VPC로 격리하여 보안과 독립성을 유지합니다. 하지만 원격 개발자나 운영자는 필요에 따라 여러 환경에 접근해야 하며, 환경마다 별도의 VPN을 구성하면 관리 복잡도가 증가합니다. 이 구성은 **단일 VPN Endpoint를 통해 중앙 Hub VPC에 연결하고, Transit Gateway를 통해 여러 격리된 VPC 환경에 선택적으로 접근**할 수 있는 Hub-and-Spoke 아키텍처를 제공합니다.

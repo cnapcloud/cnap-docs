@@ -32,9 +32,6 @@ sidebar_position: 6
 
 이 문서는 ARM64 Linux 환경에서 Kind(Kubernetes in Docker)를 사용하여 로컬 Kubernetes 클러스터를 빠르게 설치하고 설정하는 **수동 설치 가이드**입니다.
 
-> **자동 프로비저닝(스크립트)**: [kind-provision](kind-provision.md)
-
-
 ## 1. 전제 조건
 
 ### 1.1 Kind 및 kubectl 설치

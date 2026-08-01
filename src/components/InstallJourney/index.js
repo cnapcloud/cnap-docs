@@ -23,7 +23,7 @@ const PHASES = [
       {num: '2.4', title: 'CI/CD', desc: 'Jenkins · Harbor · ArgoCD', to: '/gitops/cicd/jenkins'},
       {num: '2.5', title: '관측성', desc: 'Prometheus · Jaeger · Fluentd', to: '/gitops/observability/prometheus'},
       {num: '2.6', title: '메시징', desc: 'RabbitMQ · Kafka', to: '/gitops/messaging/rabbitmq'},
-      {num: '2.7', title: '애플리케이션', desc: '샘플 애플리케이션 배포 데모', to: '/gitops/application/demo'},
+      {num: '2.7', title: '애플리케이션', desc: 'MSA 배포 데모', to: '/gitops/application/demo'},
     ],
   },
 ];

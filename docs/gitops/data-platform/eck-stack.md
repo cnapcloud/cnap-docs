@@ -1,5 +1,5 @@
 ---
-title: "ECK Stack (Elasticsearch & Kibana)"
+title: "ECK 클러스터"
 sidebar_position: 6
 ---
 

@@ -2,7 +2,7 @@
 
 CNAP(Cloud-Native Application Platform) 설치 가이드 사이트의 소스 저장소.
 [Docusaurus](https://docusaurus.io/)로 빌드되는 공개(public) 사이트이며, 문서 원본은 전부
-`docs/`에 있다. 원본 콘텐츠는 `hugo-cnap/site/content/guide/`(Hugo)에서 이전한 것이다.
+`docs/`에 있다.
 
 ## 구성
 
@@ -48,5 +48,5 @@ make docker-push    # 레지스트리 빌드/푸시
 
 ## 유지보수 원칙
 
-- `hugo-cnap`의 원본 가이드가 바뀌면 이 저장소도 함께 갱신한다(문서가 원본을 따라가지 못하는
-  것을 방지).
+- 원본 설치 가이드가 바뀌면 이 저장소도 함께 갱신한다(문서가 원본을 따라가지 못하는 것을
+  방지).

@@ -131,7 +131,7 @@ sidebar_position: 1
 - ✅ **로드밸런서 준비 완료**: AWS ALB Controller로 Ingress 즉시 사용 가능
 - ✅ **보안 강화**: Bastion 및 SSM 기반 접근 제어와 IAM Role 적용, OS 패치 자동화
 
-관련 소스 코드는 Private Repository로 관리되고 있으며, 접근이 필요한 경우 별도로 권한을 요청해 주시면 [GitHub Repository](https://github.com/cnapcloud/eks-cluster.git)를 통해 제공해 드립니다.
+관련 소스 코드는 [GitHub Repository](https://github.com/cnapcloud/k8s.git)의 `eks/` 디렉토리에서 확인할 수 있습니다.
 
 
 ### 1.2 아키텍처 개요

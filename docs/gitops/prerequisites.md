@@ -37,7 +37,7 @@ sidebar_position: 1
 
 > **도메인 안내**: 이 가이드 전반에서 `cnapcloud.com`을 예시 도메인으로 사용합니다. 실제 구성 시에는 본인이 소유한 도메인으로 교체해야 합니다. 도메인이 등장하는 모든 파일(`ClusterIssuer`, `Certificate`, `Ingress`, `values.yaml` 등)에서 `cnapcloud.com`을 실제 도메인으로 변경하세요.
 
-관련 소스 코드는 Private Repository로 관리되고 있으며, 접근이 필요한 경우 별도로 권한을 요청해 주시면 [GitHub Repository](https://github.com/cnapcloud/gitops.git)를 통해 제공해 드립니다.
+관련 소스 코드는 [GitHub Repository](https://github.com/cnapcloud/gitops.git)에서 확인할 수 있습니다.
 
 ---
 

@@ -1,5 +1,5 @@
 ---
-title: "OpenSearch 2 클러스터"
+title: "OpenSearch2 클러스터"
 sidebar_position: 7
 ---
 

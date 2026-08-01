@@ -22,6 +22,8 @@ sidebar_position: 5
 본 문서는 스크립트를 사용하여 Kind 클러스터를 자동으로 프로비저닝하는 방법을 다룹니다.
 수동 설치 가이드는 [kind-install](kind-install.md)를 참고합니다.
 
+관련 소스 코드는 [GitHub Repository](https://github.com/cnapcloud/k8s.git)의 `kind/` 디렉토리에서 확인할 수 있습니다.
+
 ## 구성
 ```
 1 Control-plane  +  4 Worker  (Docker 컨테이너 기반)

@@ -53,8 +53,6 @@ sidebar_position: 4
 
 K3s는 Rancher Labs에서 개발한 경량 Kubernetes 배포판으로, 단일 바이너리로 배포 가능한 Kubernetes입니다. 기존 Kubernetes보다 메모리와 CPU 사용량이 낮아 리소스가 제한된 환경(예: IoT, 엣지 컴퓨팅, 개발 환경)에서 효율적으로 작동하며, 표준 Kubernetes API를 지원하므로 기존 도구와 호환됩니다. K3s는 개발, 테스트, 그리고 소규모 프로덕션 환경에서 널리 사용되며, 내장된 보안 기능과 쉬운 설치로 운영 환경에서도 채택되고 있습니다.
 
-> **자동 프로비저닝(K3sup 스크립트)**: [K3s-provisioning](eks-provision.md) 참조
-
 ## 1. 사전 준비 (모든 노드 공통)
 
 ### 1.1 노드 요건

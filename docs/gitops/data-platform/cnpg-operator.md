@@ -1,5 +1,5 @@
 ---
-title: "CloudNativePG Operator"
+title: "CNPG Operator"
 sidebar_position: 3
 ---
 

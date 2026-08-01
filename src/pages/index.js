@@ -14,7 +14,16 @@ function HomepageHeader() {
           CNAP 플랫폼 설치 가이드
         </Heading>
         <p className={clsx('hero__subtitle', styles.heroSubtitle)}>
-          K8s 클러스터 → GitOps 플랫폼 설치 순서로 안내합니다.
+          <span className={styles.labeledTerm}>
+            <span className={styles.badgePublic}>공개</span>
+            K8s 클러스터
+          </span>{' '}
+          →{' '}
+          <span className={styles.labeledTerm}>
+            <span className={styles.badgePrivate}>비공개</span>
+            GitOps 플랫폼
+          </span>{' '}
+          설치 순서로 안내합니다.
         </p>
       </div>
     </header>

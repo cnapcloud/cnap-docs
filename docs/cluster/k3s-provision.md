@@ -28,7 +28,9 @@ sidebar_position: 3
 
 본 문서는 `k3sup`을 사용하여 로컬 macOS에서 원격 Ubuntu 24.04 노드에 K3s HA 클러스터를 자동으로 프로비저닝하는 방법을 다룹니다.
 
-수동 설치 가이드는 [kind-install](kind-install.md)를 참고합니다.
+수동 설치 가이드는 [k3s-install](k3s-install.md)를 참고합니다.
+
+관련 소스 코드는 [GitHub Repository](https://github.com/cnapcloud/k8s.git)의 `k3s/` 디렉토리에서 확인할 수 있습니다.
 
 ---
 

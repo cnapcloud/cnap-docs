@@ -1,5 +1,5 @@
 ---
-title: "OpenSearch Dashboards"
+title: "OpenSearch2 대시보드"
 sidebar_position: 8
 ---
 

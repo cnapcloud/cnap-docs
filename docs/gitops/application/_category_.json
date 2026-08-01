@@ -3,6 +3,6 @@
   "label": "애플리케이션",
   "link": {
     "type": "generated-index",
-    "description": "샘플 애플리케이션 배포 데모."
+    "description": "MSA 배포 데모."
   }
 }
