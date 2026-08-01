@@ -45,8 +45,3 @@ make docker-push    # 레지스트리 빌드/푸시
 - 섹션(폴더) 라벨·설명은 `_category_.json`에서 관리.
 - 새 섹션을 추가하면 `docusaurus.config.js`의 navbar/footer 링크도 함께 갱신한다.
 - 문서 작성 컨벤션은 [CLAUDE.md](CLAUDE.md) 참고.
-
-## 유지보수 원칙
-
-- 원본 설치 가이드가 바뀌면 이 저장소도 함께 갱신한다(문서가 원본을 따라가지 못하는 것을
-  방지).
