@@ -3,22 +3,6 @@ title: "Kind 클러스터 프로비저닝"
 sidebar_position: 5
 ---
 
-**목차**
-- [구성](#구성)
-- [사전 요구사항](#사전-요구사항)
-  - [macOS Docker 설치](#macos-docker-설치)
-  - [Linux (Ubuntu/Debian) Docker 설치](#linux-ubuntudebian-docker-설치)
-- [1. config.env 설정](#1-configenv-설정)
-- [2. 전체 자동 실행](#2-전체-자동-실행)
-- [3. 단계별 실행](#3-단계별-실행)
-  - [3.1 로컬 도구 설치](#31-로컬-도구-설치)
-  - [3.2 클러스터 생성](#32-클러스터-생성)
-  - [3.3 Post-setup](#33-post-setup)
-  - [3.4 Addon 설치](#34-addon-설치)
-- [4. 설치 확인](#4-설치-확인)
-- [5. 클러스터 삭제](#5-클러스터-삭제)
-- [6. 파일 구조](#6-파일-구조)
-
 본 문서는 스크립트를 사용하여 Kind 클러스터를 자동으로 프로비저닝하는 방법을 다룹니다.
 수동 설치 가이드는 [kind-install](kind-install.md)를 참고합니다.
 

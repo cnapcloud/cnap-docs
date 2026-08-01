@@ -3,49 +3,6 @@ title: "VPN 네트워크"
 sidebar_position: 2
 ---
 
-**목차**
-- [1. 개요](#1-개요)
-  - [1.1 배경](#11-배경)
-  - [1.2 Terraform 구성](#12-terraform-구성)
-  - [1.3 주요 특징](#13-주요-특징)
-  - [1.4 Terrafom 구성](#14-terrafom-구성)
-  - [1.5 구성 요소](#15-구성-요소)
-  - [1.6 아키텍처 (Hub-and-Spoke 토폴로지)](#16-아키텍처-hub-and-spoke-토폴로지)
-  - [1.7 라우팅 정책 (Hub-and-Spoke)](#17-라우팅-정책-hub-and-spoke)
-- [2. 사전 준비 사항](#2-사전-준비-사항)
-  - [2.1 Server Certificate (ACM)](#21-server-certificate-acm)
-  - [2.2 SAML Metadata 생성 및 다운로드](#22-saml-metadata-생성-및-다운로드)
-  - [2.3 Hub VPC 정보 (VPN Hub - 필수)](#23-hub-vpc-정보-vpn-hub---필수)
-  - [2.4 Spoke VPCs 정보 (DEV/STG/PRD - Spoke, 선택사항)\*\*](#24-spoke-vpcs-정보-devstgprd---spoke-선택사항)
-- [3. Terraform 설정 및 배포](#3-terraform-설정-및-배포)
-  - [3.1 변수 구성](#31-변수-구성)
-  - [3.2 Validation Rules](#32-validation-rules)
-  - [3.3 CloudWatch 로그 그룹 설정](#33-cloudwatch-로그-그룹-설정)
-  - [3.4 terraform.tfvars 파일 생성](#34-terraformtfvars-파일-생성)
-  - [3.5 Terraform 배포](#35-terraform-배포)
-  - [3.6 초기 배포 후 Route 확인 (중요)](#36-초기-배포-후-route-확인-중요)
-- [4. VPN Client 설정](#4-vpn-client-설정)
-  - [4.1 VPN 설정 파일 다운로드](#41-vpn-설정-파일-다운로드)
-  - [4.2 VPN 클라이언트 애플리케이션 설치](#42-vpn-클라이언트-애플리케이션-설치)
-  - [4.3 ovpn 설정 파일 수정](#43-ovpn-설정-파일-수정)
-  - [4.4 VPN 프로파일 생성](#44-vpn-프로파일-생성)
-  - [4.5 VPN 연결 및 인증](#45-vpn-연결-및-인증)
-- [5. 고급 설정](#5-고급-설정)
-  - [5.1 그룹별 접근 제어](#51-그룹별-접근-제어)
-  - [5.2 Self-Service Portal](#52-self-service-portal)
-- [6. 문제 해결](#6-문제-해결)
-  - [6.1 VPN 연결 문제](#61-vpn-연결-문제)
-  - [6.2 Hub VPC에서 Spoke VPC 연결 안 됨](#62-hub-vpc에서-spoke-vpc-연결-안-됨)
-  - [6.3 VPN Client에서 Spoke VPC 연결 안 됨](#63-vpn-client에서-spoke-vpc-연결-안-됨)
-    - [시나리오 1: 초기 배포 후 처음 연결 시](#시나리오-1-초기-배포-후-처음-연결-시)
-    - [시나리오 2: spoke\_vpc\_cidrs\_list 변경 후](#시나리오-2-spoke_vpc_cidrs_list-변경-후)
-    - [시나리오 3: Route는 있지만 연결 안 됨](#시나리오-3-route는-있지만-연결-안-됨)
-  - [6.4 Spoke VPC 보안 그룹 설정](#64-spoke-vpc-보안-그룹-설정)
-  - [6.5 라우팅 구성 확인](#65-라우팅-구성-확인)
-- [7. 정리](#7-정리)
-- [참고자료](#참고자료)
-
-
 ## 1. 개요
 
 이 Terraform 구성은 Keycloak SAML 인증 기반의 AWS Client VPN과 Transit Gateway Hub-and-Spoke 아키텍처를 자동으로 배포합니다.
