@@ -15,12 +15,17 @@ function HomepageHeader() {
         </Heading>
         <p className={clsx('hero__subtitle', styles.heroSubtitle)}>
           <span className={styles.labeledTerm}>
-            <span className={styles.badgePublic}>공개</span>
+            <a
+              href="https://github.com/cnapcloud/k8s"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.badgePublic}>
+              소스공개
+            </a>
             K8s 클러스터
           </span>{' '}
           →{' '}
           <span className={styles.labeledTerm}>
-            <span className={styles.badgePrivate}>비공개</span>
             GitOps 플랫폼
           </span>{' '}
           설치 순서로 안내합니다.

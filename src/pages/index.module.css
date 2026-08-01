@@ -46,6 +46,13 @@
 .badgePublic {
   color: #15803d;
   background: rgba(21, 128, 61, 0.12);
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.badgePublic:hover {
+  color: #15803d;
+  background: rgba(21, 128, 61, 0.2);
 }
 
 .badgePrivate {
