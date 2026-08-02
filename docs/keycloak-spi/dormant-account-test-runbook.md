@@ -1,6 +1,6 @@
 ---
-title: "휴면 계정 통합 테스트"
-sidebar_position: 5
+title: "휴면 계정 테스트"
+sidebar_position: 7
 ---
 
 ## 1. 설정 기준

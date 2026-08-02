@@ -1,6 +1,6 @@
 ---
 title: "약관 버전 관리"
-sidebar_position: 7
+sidebar_position: 5
 ---
 
 ---
