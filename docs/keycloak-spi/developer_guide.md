@@ -859,7 +859,7 @@ ${(termsServiceContent)!(""?no_esc)}
 ${((termsServiceContent)!"")?no_esc}
 ```
 
-**적용 위치**: [terms-consent.ftl](../src/main/resources/theme-resources/templates/terms-consent.ftl)
+**적용 위치**: [terms-consent.ftl](https://github.com/cnapcloud/keycloak-extension-spi/blob/main/src/main/resources/theme-resources/templates/terms-consent.ftl)
 내 모든 약관 content 출력 표현식 (`termsServiceContent`, `termsPrivacyRequiredContent`,
 `termsPrivacyOptionalContent`, `termsMarketingContent`).
 
@@ -884,8 +884,8 @@ themeVersion=26.5.2-3
 
 배포 버전이 바뀌면 URL이 달라지므로 브라우저가 새 파일을 강제로 요청한다.
 
-**관련 파일**: [template.ftl](../src/main/resources/theme/keycloak.ext/login/template.ftl),
-[theme.properties](../src/main/resources/theme/keycloak.ext/login/theme.properties)
+**관련 파일**: [template.ftl](https://github.com/cnapcloud/keycloak-extension-spi/blob/main/src/main/resources/theme/keycloak.ext/login/template.ftl),
+[theme.properties](https://github.com/cnapcloud/keycloak-extension-spi/blob/main/src/main/resources/theme/keycloak.ext/login/theme.properties)
 
 ### unmanagedAttributePolicy와 UserModel 접근
 
