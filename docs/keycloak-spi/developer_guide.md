@@ -3,7 +3,7 @@ title: "개발자 가이드"
 sidebar_position: 4
 ---
 
-> Keycloak Extension SPI 기능 추가 및 유지를 보수를 위한 개발자 가이드
+> Keycloak Extension SPI 기능 추가 및 유지 보수를 위한 개발자 가이드
 
 ---
 
