@@ -3,7 +3,7 @@ title: "개발자 가이드"
 sidebar_position: 4
 ---
 
-> Keycloak Extension SPI 유지보수 및 기능 추가를 위한 구조 안내서
+> Keycloak Extension SPI 기능 추가 및 유지를 보수를 위한 개발자 가이드
 
 ---
 
@@ -55,6 +55,7 @@ SPI 등록은 `src/main/resources/META-INF/services/` 하위 파일로 관리된
 | | `RegistrationVerifyResourceProviderFactory` |
 | | `UserProfileResourceFactory` |
 | | `ProfilePageResourceFactory` |
+| | `RateLimitAdminResourceFactory` |
 | `UserStorageProviderFactory` | `UserProviderFactory` |
 | | `DormantAccountScheduledTask` |
 
@@ -680,6 +681,7 @@ FTL에서 `${msg("키")}` 또는 `${msg("키", 파라미터)}` 로 참조
 | `/username-find/` | `UsernameFindResourceProviderFactory` | 아이디 찾기 |
 | (프로파일 관련) | `UserProfileResourceFactory` | 사용자 프로파일 API |
 | (프로파일 페이지) | `ProfilePageResourceFactory` | 프로파일 페이지 |
+| `/rate-limit-admin/` | `RateLimitAdminResourceFactory` | Rate limit 잠금 조회/해제 (admin 전용) |
 
 ### 주요 API 상세
 
@@ -699,6 +701,55 @@ FTL에서 `${msg("키")}` 또는 `${msg("키", 파라미터)}` 로 참조
 | POST | `/verify-code` | 인증 코드 검증 |
 
 제한: 30분 내 최대 5회, TTL 300초
+
+**RateLimitAdminResource**
+
+| 메서드 | 경로 | 인증 | 설명 |
+|--------|------|------|------|
+| GET | `/locked` | Bearer 토큰 + realm-management `manage-users` role | 현재 realm에서 락 걸린 항목 목록 |
+| POST | `/reset` | 위와 동일 | `{"type": "pwreset\|register\|userfind\|profile", "identifier": ...}`로 특정 항목 해제 |
+
+`type`이 `pwreset`/`profile`이면 `identifier`는 username(내부에서 userId로 변환).
+`register`/`userfind`면 `identifier`는 email 또는 전화번호 원본값.
+
+호출 계정은 master가 아니라 **대상 realm(cnap 등)에 속한 사용자**여야 한다.
+
+호출 시 토큰은 반드시 **대상 realm(cnap 등)에서 직접 발급받은 토큰**이어야 한다.
+master realm 토큰은 issuer가 달라 401이 난다(Admin REST API와 달리 이 SPI 엔드포인트는
+master realm 관리자의 cross-realm 권한을 인식하지 않는다).
+
+토큰에 role이 실리려면 두 가지가 모두 되어 있어야 한다:
+
+1. 호출 계정에 `realm-management`의 `manage-users` client role이 assign 되어 있을 것
+2. 클라이언트(admin-cli 등)가 `client.use.lightweight.access.token.enabled=true`인 경우,
+   `roles` client scope의 `client roles` 매퍼에서 "Add to lightweight access token"도 켜져
+   있을 것 -- 1번만 되어 있으면 role은 있어도 실제 발급 토큰에는 안 실려서 403이 난다.
+
+**테스트 스크립트**
+
+```bash
+KC_URL=http://localhost:8080
+KC_REALM=cnap
+KC_ADMIN=admin
+KC_ADMIN_PW=password
+
+TOKEN=$(curl -s -X POST $KC_URL/realms/$KC_REALM/protocol/openid-connect/token \
+  -d "client_id=admin-cli&grant_type=password&username=$KC_ADMIN&password=$KC_ADMIN_PW" \
+  | jq -r '.access_token')
+
+# 잠긴 항목 목록
+curl -s $KC_URL/realms/$KC_REALM/rate-limit-admin/locked \
+  -H "Authorization: Bearer $TOKEN" | jq .
+
+# 특정 항목 해제
+curl -s -X POST $KC_URL/realms/$KC_REALM/rate-limit-admin/reset \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"type":"profile","identifier":"admin"}'
+```
+
+여러 줄로 나눠서 실행할 때 `\` 뒤에 공백이 섞이면(특히 터미널에 붙여넣기 시) zsh가
+줄바꿈 이어붙이기로 인식하지 못해 명령이 중간에 끊기고 아무 응답도 없이 종료될 수 있다.
+응답이 비어있으면 `-w "\nHTTP_STATUS:%{http_code}\n"`를 붙여 실제로 요청이 갔는지부터 확인한다.
 
 ### Bearer 토큰 인증 처리
 
@@ -808,7 +859,7 @@ ${(termsServiceContent)!(""?no_esc)}
 ${((termsServiceContent)!"")?no_esc}
 ```
 
-**적용 위치**: [terms-consent.ftl](https://github.com/cnapcloud/keycloak-extension-spi/blob/main/src/main/resources/theme-resources/templates/terms-consent.ftl)
+**적용 위치**: [terms-consent.ftl](../src/main/resources/theme-resources/templates/terms-consent.ftl)
 내 모든 약관 content 출력 표현식 (`termsServiceContent`, `termsPrivacyRequiredContent`,
 `termsPrivacyOptionalContent`, `termsMarketingContent`).
 
@@ -833,8 +884,8 @@ themeVersion=26.5.2-3
 
 배포 버전이 바뀌면 URL이 달라지므로 브라우저가 새 파일을 강제로 요청한다.
 
-**관련 파일**: [template.ftl](https://github.com/cnapcloud/keycloak-extension-spi/blob/main/src/main/resources/theme/keycloak.ext/login/template.ftl),
-[theme.properties](https://github.com/cnapcloud/keycloak-extension-spi/blob/main/src/main/resources/theme/keycloak.ext/login/theme.properties)
+**관련 파일**: [template.ftl](../src/main/resources/theme/keycloak.ext/login/template.ftl),
+[theme.properties](../src/main/resources/theme/keycloak.ext/login/theme.properties)
 
 ### unmanagedAttributePolicy와 UserModel 접근
 
