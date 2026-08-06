@@ -95,6 +95,17 @@ OTP_CODE_LIFESPAN_SECONDS: '300'
 | 개발 | `300` (5분) — 여유있게 테스트 |
 | 운영 | `180` ~ `300` |
 
+#### OTP_RESEND_COOLDOWN_SECONDS
+
+```yaml
+OTP_RESEND_COOLDOWN_SECONDS: '30'
+```
+
+재전송 버튼 자체 쿨다운(초)을 지정한다. 설정하지 않으면 **기본값 30초**가 적용된다.
+`OTP_CODE_LIFESPAN_SECONDS`(코드 자체의 만료 시간)와는 별개로, 재전송을 다시 누를 수 있을
+때까지의 대기 시간만 조정한다. 로그인·비밀번호 찾기·아이디 찾기·회원가입 인증 4개 OTP
+기능 모두 이 값을 동일하게 사용한다.
+
 #### OTP_RATE_LIMIT_MAX_ATTEMPTS
 
 ```yaml
