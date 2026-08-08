@@ -637,10 +637,16 @@ CSS를 변경할 때마다 `theme.properties`의 `themeVersion` 값을 올려야
 
 ```properties
 # theme/keycloak.ext/login/theme.properties
-themeVersion=26.5.2-4
+themeVersion=@theme.css.version@
 ```
-
-버전을 올리지 않으면 배포 후에도 브라우저가 이전 CSS를 그대로 사용한다.
+themeVersion은 mvn package 빌드 시 output.css의 SHA-1 해시로 자동 치환됩니다.
+- maven-antrun-plugin → output.css SHA-1 계산
+- maven-resources-plugin → @theme.css.version@ 치환
+- CSS 변경 → SHA-1 변경 → 브라우저 캐시 자동 무효화
+  
+따라서 CSS 변경 시 themeVersion을 수동으로 변경할 필요가 없습니다.
+빌드 후 실제 값은 다음 파일에서 확인할 수 있습니다.
+target/classes/theme/keycloak.ext/login/theme.properties
 
 **커스텀 CSS 클래스** (`input.css` `@layer components` 정의)
 
